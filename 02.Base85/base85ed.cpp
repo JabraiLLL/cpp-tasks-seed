@@ -1,3 +1,33 @@
+#include "base85ed.h"
+#include <array>
+#include <stdexcept>
+#include <algorithm>
+#include <vector>
+#include <cstdint>
+
+namespace base85 {
+
+static constexpr char ALPHABET[] =
+    "0123456789"
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "abcdefghijklmnopqrstuvwxyz"
+    "!#$%&()*+-;<=>?@^_`{|}~";
+
+static constexpr std::array<uint8_t, 256> buildDecodeTable() {
+    std::array<uint8_t, 256> table{};
+    for (auto& v : table) v = 255;
+    for (uint8_t i = 0; i < 85; ++i) {
+        table[static_cast<uint8_t>(ALPHABET[i])] = i;
+    }
+    return table;
+}
+
+static constexpr auto DECODE_TABLE = buildDecodeTable();
+
+static inline bool isWhitespace(uint8_t c) {
+    return c == ' ' || c == '\n' || c == '\r' || c == '\t';
+}
+
 std::vector<uint8_t> encode(const std::vector<uint8_t>& bytes) {
     std::vector<uint8_t> result;
     if (bytes.empty()) return result;
@@ -21,7 +51,6 @@ std::vector<uint8_t> encode(const std::vector<uint8_t>& bytes) {
             val /= 85;
         }
         
-        // Для последнего неполного блока: добавляем только нужные символы
         if (chunkSize < 4) {
             result.insert(result.end(), block, block + chunkSize + 1);
         } else {
@@ -58,23 +87,16 @@ std::vector<uint8_t> decode(const std::vector<uint8_t>& data) {
             val = val * 85 + DECODE_TABLE[filtered[i++]];
         }
         
-        // Дополняем до 5 символов кодом '~' (84) если блок неполный
         for (int j = blockLen; j < 5; ++j) {
             val = val * 85 + 84;
         }
         
-        if (val > 0xFFFFFFFF) {
-            throw std::invalid_argument("Value overflow");
-        }
-        
-        // Извлекаем 4 байта
         uint8_t decoded[4];
         decoded[0] = (val >> 24) & 0xFF;
         decoded[1] = (val >> 16) & 0xFF;
         decoded[2] = (val >> 8) & 0xFF;
         decoded[3] = val & 0xFF;
         
-        // Добавляем только нужное количество байт для последнего блока
         if (blockLen < 5) {
             result.insert(result.end(), decoded, decoded + blockLen - 1);
         } else {
@@ -84,3 +106,5 @@ std::vector<uint8_t> decode(const std::vector<uint8_t>& data) {
     
     return result;
 }
+
+} // namespace base85
