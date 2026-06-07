@@ -1,0 +1,54 @@
+[33m143dcf3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mpatch-3[m[33m)[m some changes
+[33mdb66ab0[m some changes
+[33mba507ef[m Update action.yml
+[33m7738daa[m Add Gauss solver
+[33m4201374[m Add Gauss solver
+[33m4b5ace3[m Merge branch 'dluciv:main' into patch-3
+[33ma34e41d[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Update Makefile
+[33m0eca304[m Update Makefile
+[33ma48aaa7[m Update base85ed.cpp
+[33m7a3d606[m Apply astyle formatting
+[33m4a94edd[m Update Makefile
+[33ma6935aa[m Update Makefile
+[33mc1f096b[m Update Makefile
+[33m66e955e[m Add bubble sort, quick sort and integration tests
+[33m2f7288e[m Update README.md
+[33m7164541[m Update README.md
+[33m4b0bb86[m Update README.md
+[33mdf28fad[m README.md badges
+[33m80e4747[m clang-tidy fix
+[33m6fef727[m Gauss
+[33m30103ad[m README
+[33mc2d9c3b[m explicitly bash
+[33m227ebbb[m Docs and TODOs
+[33m3e028de[m Tidy
+[33m60dd439[m Reformatted
+[33m407da42[m Breathes =)
+[33mc13db2e[m base85 partial
+[33m1c8a250[m Стиль однако
+[33ma7f420c[m Ещё проект
+[33m82fbfa9[m Заготовка для сортировок
+[33me97be6b[m По бейджам
+[33m7cf76cf[m Not so hard
+[33m9be0477[m Попробуем так
+[33m32e0cce[m aww stupid
+[33m87fe48a[m astyle subfolder
+[33mdd9c780[m yaml fix
+[33m8980270[m Причесал
+[33m779fcc2[m Create Makefile.hdrdep
+[33m786daa0[m Delete 01.DummyMake/01.DummyMake/Makefile.hdrdep
+[33m3cacae9[m Create Makefile.hdrdep
+[33m42acac2[m Delete 01.DummyMake/Makefile.hdrdep
+[33m15db492[m Update make_and_test.yml
+[33m354e3af[m Update make_and_test.yml
+[33medc26b5[m Update README.md
+[33m1d53909[m Badge links
+[33m065f4ca[m style check
+[33m00eb614[m Badge
+[33mc361912[m gtest to end
+[33ma7e2f82[m Интеграционные тесты
+[33m8176c27[m Small complete example
+[33m8911066[m shell
+[33mea7d38e[m Move action
+[33m202f75d[m Try to build something
+[33md5e3a56[m Initial commit
