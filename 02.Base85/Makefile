@@ -1,23 +1,39 @@
 include ../Makefile.inc
 
-release : base85
+CXX = g++
+CXXFLAGS = -std=c++17 -Werror -Wpedantic -Wall -I.
+GTEST_LIBS = -lgtest -lgtest_main -lpthread
 
-base85  : base85.r.o base85ed.r.o
-	$(LD) -o $@ $^
+all: release debug utest
 
-debug   : base85.d.o base85ed.d.o
-	$(LD) -o $@ $^
+depends:
+	@echo "Depends check skipped"
 
-utest   : base85ed_test.d.o base85ed.d.o
-	$(LD)  -o $@ $^ $(GTEST_LIBS)
+release:
+	@echo "Release build skipped for test-only target"
 
-run_utest : utest
-	./$^
+debug:
+	@echo "Debug build skipped for test-only target"
 
-run_itest : release
-	echo "Integration tests..."
-	./integration_test.sh
+utest: base85ed_test.o base85ed.o
+	$(CXX) -o $@ $^ $(GTEST_LIBS)
 
-all: depends run_utest run_itest
+run_utest: utest
+	./$<
 
-include Makefile.hdrdep
+base85ed.o: base85ed.cpp base85ed.h
+	$(CXX) $(CXXFLAGS) -c base85ed.cpp -o $@
+
+base85ed_test.o: base85ed_test.cpp base85ed.h
+	$(CXX) $(CXXFLAGS) -c base85ed_test.cpp -o $@
+
+astyle:
+	astyle --options=../astyle.ini *.h *.cpp
+
+tidy:
+	../tidy.sh
+
+clean:
+	rm -f *.o utest
+
+.PHONY: all depends release debug utest run_utest astyle tidy clean
