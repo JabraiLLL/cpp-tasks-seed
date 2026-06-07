@@ -4,10 +4,16 @@ CXX = g++
 CXXFLAGS = -std=c++17 -Werror -Wpedantic -Wall -I.
 GTEST_LIBS = -lgtest -lgtest_main -lpthread
 
-all: utest
+all: release debug utest
 
 depends:
 	@echo "Depends check skipped"
+
+release:
+	@echo "Release build skipped for test-only target"
+
+debug:
+	@echo "Debug build skipped for test-only target"
 
 utest: base85ed_test.o base85ed.o
 	$(CXX) -o $@ $^ $(GTEST_LIBS)
@@ -27,4 +33,4 @@ tidy:
 clean:
 	rm -f *.o utest
 
-.PHONY: all depends utest astyle tidy clean
+.PHONY: all depends release debug utest astyle tidy clean
