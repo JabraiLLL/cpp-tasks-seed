@@ -1,117 +1,114 @@
+#include "base85ed.h"
+#include <array>
+#include <stdexcept>
+#include <algorithm>
 #include <vector>
 #include <cstdint>
-#include <string>
-#include <stdexcept>
-#include <cstring>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <errno.h>
 
-#include "base85ed.h"
+namespace base85 {
 
-// TODO: remove this
-static std::vector<uint8_t> run_command_io(const std::string &command,
-        const std::vector<uint8_t> &in)
-{
-    int inpipe[2];   // parent -> child
-    int outpipe[2];  // child -> parent
+static constexpr char ALPHABET[] =
+    "0123456789"
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "abcdefghijklmnopqrstuvwxyz"
+    "!#$%&()*+-;<=>?@^_`{|}~";
 
-    if (pipe(inpipe) == -1) throw std::runtime_error(strerror(errno));
-    if (pipe(outpipe) == -1)
-    {
-        close(inpipe[0]);
-        close(inpipe[1]);
-        throw std::runtime_error(strerror(errno));
+static constexpr std::array<uint8_t, 256> buildDecodeTable() {
+    std::array<uint8_t, 256> table{};
+    for (auto& v : table) v = 255;
+    for (uint8_t i = 0; i < 85; ++i) {
+        table[static_cast<uint8_t>(ALPHABET[i])] = i;
     }
+    return table;
+}
 
-    pid_t pid = fork();
-    if (pid == -1)
-    {
-        close(inpipe[0]);
-        close(inpipe[1]);
-        close(outpipe[0]);
-        close(outpipe[1]);
-        throw std::runtime_error(strerror(errno));
-    }
+static constexpr auto DECODE_TABLE = buildDecodeTable();
 
-    if (pid == 0)
-    {
-        // child
-        dup2(inpipe[0], STDIN_FILENO);
-        dup2(outpipe[1], STDOUT_FILENO);
-        close(inpipe[0]);
-        close(inpipe[1]);
-        close(outpipe[0]);
-        close(outpipe[1]);
-        execl("/bin/sh", "sh", "-c", command.c_str(), (char*)nullptr);
-        _exit(127);
-    }
+static inline bool isWhitespace(uint8_t c) {
+    return c == ' ' || c == '\n' || c == '\r' || c == '\t';
+}
 
-    // parent
-    close(inpipe[0]);
-    close(outpipe[1]);
-
-    // write input
-    const uint8_t *wp = in.data();
-    ssize_t remaining = static_cast<ssize_t>(in.size());
-    while (remaining > 0)
-    {
-        ssize_t n = write(inpipe[1], wp, remaining);
-        if (n == -1)
-        {
-            if (errno == EINTR) continue;
-            close(inpipe[1]);
-            close(outpipe[0]);
-            waitpid(pid, nullptr, 0);
-            throw std::runtime_error(strerror(errno));
+std::vector<uint8_t> encode(const std::vector<uint8_t>& bytes) {
+    std::vector<uint8_t> result;
+    if (bytes.empty()) return result;
+    
+    size_t i = 0;
+    while (i < bytes.size()) {
+        uint32_t val = 0;
+        int chunkSize = 0;
+        
+        for (int j = 0; j < 4; ++j) {
+            val <<= 8;
+            if (i < bytes.size()) {
+                val |= bytes[i++];
+                chunkSize++;
+            }
         }
-        remaining -= n;
-        wp += n;
-    }
-    close(inpipe[1]); // signal EOF
-
-    // read all stdout
-    std::vector<uint8_t> out;
-    uint8_t buf[4096];
-    while (true)
-    {
-        ssize_t n = read(outpipe[0], buf, sizeof(buf));
-        if (n > 0) out.insert(out.end(), buf, buf + n);
-        else if (n == 0) break;
-        else
-        {
-            if (errno == EINTR) continue;
-            close(outpipe[0]);
-            waitpid(pid, nullptr, 0);
-            throw std::runtime_error(strerror(errno));
+        
+        uint8_t block[5];
+        for (int j = 4; j >= 0; --j) {
+            block[j] = ALPHABET[val % 85];
+            val /= 85;
+        }
+        
+        if (chunkSize < 4) {
+            result.insert(result.end(), block, block + chunkSize + 1);
+        } else {
+            result.insert(result.end(), block, block + 5);
         }
     }
-    close(outpipe[0]);
-
-    int status = 0;
-    if (waitpid(pid, &status, 0) == -1) throw std::runtime_error(strerror(errno));
-    if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
-        throw std::runtime_error("child exited with non-zero status");
-
-    return out;
+    
+    return result;
 }
 
-
-// TODO: implement this in C++
-std::vector<uint8_t> base85::encode(std::vector<uint8_t> const &bytes)
-{
-    return run_command_io(
-               "/usr/bin/env -S python3 -c 'import sys; import base64; sys.stdout.buffer.write(base64.b85encode(sys.stdin.buffer.read()))'",
-               bytes
-           );
+std::vector<uint8_t> decode(const std::vector<uint8_t>& data) {
+    if (data.empty()) return {};
+    
+    std::vector<uint8_t> filtered;
+    for (uint8_t c : data) {
+        if (isWhitespace(c)) continue;
+        if (DECODE_TABLE[c] == 255) {
+            throw std::invalid_argument("Invalid Base85 character");
+        }
+        filtered.push_back(c);
+    }
+    
+    if (filtered.empty()) return {};
+    
+    std::vector<uint8_t> result;
+    size_t i = 0;
+    
+    while (i < filtered.size()) {
+        int remaining = filtered.size() - i;
+        int blockLen = (remaining >= 5) ? 5 : remaining;
+        
+        uint32_t val = 0;
+        for (int j = 0; j < blockLen; ++j) {
+            val = val * 85 + DECODE_TABLE[filtered[i++]];
+        }
+        
+        for (int j = blockLen; j < 5; ++j) {
+            val = val * 85 + 84;
+        }
+        
+        if (val > 0xFFFFFFFF) {
+            throw std::invalid_argument("Value overflow");
+        }
+        
+        uint8_t decoded[4];
+        decoded[0] = (val >> 24) & 0xFF;
+        decoded[1] = (val >> 16) & 0xFF;
+        decoded[2] = (val >> 8) & 0xFF;
+        decoded[3] = val & 0xFF;
+        
+        if (blockLen < 5) {
+            result.insert(result.end(), decoded, decoded + blockLen - 1);
+        } else {
+            result.insert(result.end(), decoded, decoded + 4);
+        }
+    }
+    
+    return result;
 }
 
-
-// TODO: implement this in C++
-std::vector<uint8_t> base85::decode(std::vector<uint8_t> const &b85str)
-{
-    return run_command_io(
-               "/usr/bin/env -S python3 -c 'import sys; import base64; sys.stdout.buffer.write(base64.b85decode(sys.stdin.buffer.read()))'",
-               b85str
-           );
-}
+} // namespace base85
