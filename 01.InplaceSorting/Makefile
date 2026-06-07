@@ -1,21 +1,31 @@
 include ../Makefile.inc
 
-release : sort_demo.r.o
-	$(LD) -o $@ $^
+CXX = g++
+CXXFLAGS = -std=c++17 -Werror -Wpedantic -Wall -I.
+GTEST_LIBS = -lgtest -lgtest_main -lpthread
 
-debug   : sort_demo.d.o
-	$(LD) -o $@ $^
+all: run_utest run_itest
 
-utest   : sort_test.d.o
-	$(LD)  -o $@ $^ $(GTEST_LIBS)
+utest: sort_test.o
+	$(CXX) -o $@ $^ $(GTEST_LIBS)
 
-run_utest : utest
-	./$^
+sort_test.o: sort_test.cpp sorting.h
+	$(CXX) $(CXXFLAGS) -c sort_test.cpp -o $@
 
-run_itest : debug
-	echo "Integration tests..."
-	./$^
+run_utest: utest
+	./$<
 
-all: depends run_utest run_itest
+run_itest: utest
+	@echo "=== Integration tests (different sizes) ==="
+	./utest --gtest_filter=IntegrationTest.*
 
-include Makefile.hdrdep
+astyle:
+	astyle --options=../astyle.ini *.h *.cpp
+
+tidy:
+	../tidy.sh
+
+clean:
+	rm -f utest sort_test.o
+
+.PHONY: all run_utest run_itest astyle tidy clean
