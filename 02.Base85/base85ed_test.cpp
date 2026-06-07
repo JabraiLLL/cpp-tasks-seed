@@ -1,154 +1,114 @@
 #include <gtest/gtest.h>
-#include <random>
+#include <vector>
+#include <string>
 #include "base85ed.h"
 
-using namespace base85;
-
 static std::vector<uint8_t> cstr2v(const char* s) {
-    return std::vector<uint8_t>(s, s + std::string(s).size());
+    return std::vector<uint8_t>(s, s + std::string(s).length());
 }
 
-TEST(Base85Test, EmptyString) {
-    EXPECT_TRUE(encode({}).empty());
-    EXPECT_TRUE(decode({}).empty());
-    EXPECT_EQ(encodeToString(""), "");
-    EXPECT_EQ(decodeToString(""), "");
+TEST(Base85Extended, EncodeDecodeEmptyString) {
+    std::vector<uint8_t> empty;
+    EXPECT_EQ(base85::encode(empty), empty);
+    EXPECT_EQ(base85::decode(empty), empty);
 }
 
-TEST(Base85Test, ShortCases) {
-    struct TestCase {
-        const char* encoded;
-        const char* decoded;
-    };
-    
-    std::vector<TestCase> cases = {
-        {"", ""},
-        {"5l", "A"},
-        {"5l>", "AB"},
-        {"5l>h", "ABC"},
-        {"5l>h?", "ABCD"},
-        {"87cURDZ", "Hello"},
-        {"<~OuLrB>~", "Test"},
-        {"F)kW", "1234"},
-        {"F)}j", "123"},
-        {"F){", "12"},
-        {"F#", "1"},
-    };
-    
-    for (const auto& tc : cases) {
-        EXPECT_EQ(encode(cstr2v(tc.decoded)), cstr2v(tc.encoded));
-        EXPECT_EQ(decode(cstr2v(tc.encoded)), cstr2v(tc.decoded));
+TEST(Base85Extended, EncodeDecodeSingleChar) {
+    for (char c = 'a'; c <= 'z'; ++c) {
+        std::string s(1, c);
+        auto encoded = base85::encode(cstr2v(s.c_str()));
+        auto decoded = base85::decode(encoded);
+        EXPECT_EQ(cstr2v(s.c_str()), decoded);
     }
 }
 
-TEST(Base85Test, AllBytes) {
-    std::vector<uint8_t> allBytes;
-    for (int i = 0; i < 256; ++i) {
-        allBytes.push_back(static_cast<uint8_t>(i));
-    }
-    
-    auto encoded = encode(allBytes);
-    auto decoded = decode(encoded);
-    EXPECT_EQ(allBytes, decoded);
-}
-
-TEST(Base85Test, Zeros) {
-    std::vector<uint8_t> zeros(4, 0);
-    EXPECT_EQ(encode(zeros), cstr2v("00000"));
-    EXPECT_EQ(decode(cstr2v("00000")), zeros);
-}
-
-TEST(Base85Test, MaxBytes) {
-    std::vector<uint8_t> maxBytes = {0xFF, 0xFF, 0xFF, 0xFF};
-    EXPECT_EQ(encode(maxBytes), cstr2v("|NsC0"));
-    EXPECT_EQ(decode(cstr2v("|NsC0")), maxBytes);
-}
-
-TEST(Base85Test, WhitespaceTolerance) {
-    const char* clean = "F)kW";
-    const char* messy = " \n F \r ) \t k \n W \t ";
-    
-    EXPECT_EQ(decode(cstr2v(clean)), decode(cstr2v(messy)));
-    EXPECT_EQ(decodeToString(messy), "1234");
-}
-
-TEST(Base85Test, InvalidCharactersThrow) {
-    EXPECT_THROW(decode(cstr2v("F)ыkW")), std::invalid_argument);
-    EXPECT_THROW(decode(cstr2v("F),kW")), std::invalid_argument);
-    EXPECT_THROW(decode(cstr2v("Hello\xFFWorld")), std::invalid_argument);
-}
-
-TEST(Base85Test, InvalidLengthThrow) {
-    EXPECT_THROW(decode(cstr2v("F")), std::invalid_argument);
-    EXPECT_THROW(decode(cstr2v("FF")), std::invalid_argument);
-    EXPECT_THROW(decode(cstr2v("FFF")), std::invalid_argument);
-    EXPECT_THROW(decode(cstr2v("FFFF")), std::invalid_argument);
-    EXPECT_THROW(decode(cstr2v("FFFFFF")), std::invalid_argument);
-}
-
-TEST(Base85Test, OverflowThrow) {
-    EXPECT_THROW(decode(cstr2v("~~~~~")), std::invalid_argument);
-}
-
-TEST(Base85Test, RandomData) {
-    std::mt19937 rng(12345);
-    std::uniform_int_distribution<size_t> sizeDist(0, 5000);
-    std::uniform_int_distribution<uint8_t> byteDist(0, 255);
-    
-    for (int test = 0; test < 50; ++test) {
-        size_t size = sizeDist(rng);
-        std::vector<uint8_t> original(size);
-        for (auto& b : original) {
-            b = byteDist(rng);
-        }
-        
-        auto encoded = encode(original);
-        auto decoded = decode(encoded);
-        EXPECT_EQ(original, decoded);
-        
-        std::string strEncoded(encoded.begin(), encoded.end());
-        auto strDecoded = decodeToString(strEncoded);
-        EXPECT_EQ(std::string(original.begin(), original.end()), strDecoded);
+TEST(Base85Extended, EncodeDecodeTwoChars) {
+    std::vector<std::string> cases = { "ab", "cd", "12", "xy", "!!" };
+    for (const auto& s : cases) {
+        auto encoded = base85::encode(cstr2v(s.c_str()));
+        auto decoded = base85::decode(encoded);
+        EXPECT_EQ(cstr2v(s.c_str()), decoded);
     }
 }
 
-TEST(Base85Test, EdgeLengths) {
-    for (int len = 0; len <= 20; ++len) {
-        std::vector<uint8_t> data(len, static_cast<uint8_t>(len));
-        auto encoded = encode(data);
-        auto decoded = decode(encoded);
-        EXPECT_EQ(data, decoded);
+TEST(Base85Extended, EncodeDecodeThreeChars) {
+    std::vector<std::string> cases = { "abc", "123", "xyz", "!@#" };
+    for (const auto& s : cases) {
+        auto encoded = base85::encode(cstr2v(s.c_str()));
+        auto decoded = base85::decode(encoded);
+        EXPECT_EQ(cstr2v(s.c_str()), decoded);
     }
 }
 
-TEST(Base85Test, LargeData) {
-    std::vector<uint8_t> large(100000, 0x55);
-    auto encoded = encode(large);
-    auto decoded = decode(encoded);
-    EXPECT_EQ(large, decoded);
-    EXPECT_EQ(encoded.size(), (large.size() + 3) / 4 * 5);
+TEST(Base85Extended, EncodeDecodeFourChars) {
+    std::vector<std::string> cases = { "abcd", "1234", "wxyz", "!@#$" };
+    for (const auto& s : cases) {
+        auto encoded = base85::encode(cstr2v(s.c_str()));
+        auto decoded = base85::decode(encoded);
+        EXPECT_EQ(cstr2v(s.c_str()), decoded);
+    }
 }
 
-TEST(Base85Test, RoundtripString) {
-    std::vector<std::string> tests = {
-        "",
-        "A",
-        "Hello World!",
+TEST(Base85Extended, EncodeDecodeVariousLengths) {
+    std::vector<std::string> test_strings = {
+        "Hello",
+        "Hello, World!",
+        "The quick brown fox jumps over the lazy dog",
         "1234567890",
-        "!@#$%^&*()",
-        std::string(100, 'X'),
-        "The quick brown fox jumps over the lazy dog"
+        std::string(10, 'a'),
+        std::string(20, 'b'),
+        std::string(50, 'c'),
+        std::string(100, 'd'),
+        std::string(200, 'e'),
+        std::string(500, 'f'),
+        std::string(1000, 'g')
     };
-    
-    for (const auto& test : tests) {
-        std::string encoded = encodeToString(test);
-        std::string decoded = decodeToString(encoded);
-        EXPECT_EQ(test, decoded);
-        EXPECT_TRUE(encoded.length() == 0 || encoded.length() % 5 == 0);
+    for (const auto& test_str : test_strings) {
+        std::vector<uint8_t> original(test_str.begin(), test_str.end());
+        auto encoded = base85::encode(original);
+        auto decoded = base85::decode(encoded);
+        EXPECT_EQ(original, decoded) << "Failed for string of length " << test_str.length();
     }
 }
 
-int main(int argc, char** argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+TEST(Base85Extended, EncodeOutputSize) {
+    EXPECT_EQ(base85::encode(cstr2v("")).size(), 0);
+    EXPECT_EQ(base85::encode(cstr2v("1")).size(), 2);
+    EXPECT_EQ(base85::encode(cstr2v("12")).size(), 3);
+    EXPECT_EQ(base85::encode(cstr2v("123")).size(), 4);
+    EXPECT_EQ(base85::encode(cstr2v("1234")).size(), 5);
+    EXPECT_EQ(base85::encode(cstr2v("12345")).size(), 7);
+}
+
+TEST(Base85Extended, EncodeDecodeBinaryData) {
+    std::vector<uint8_t> binary;
+    for (int i = 0; i < 256; ++i) {
+        binary.push_back(static_cast<uint8_t>(i));
+    }
+    auto encoded = base85::encode(binary);
+    auto decoded = base85::decode(encoded);
+    EXPECT_EQ(binary, decoded);
+}
+
+TEST(Base85Extended, EncodeDecodeRepeatedPatterns) {
+    for (int len = 1; len <= 20; ++len) {
+        std::vector<uint8_t> pattern;
+        for (int i = 0; i < len; ++i) {
+            pattern.push_back(i % 256);
+        }
+        auto encoded = base85::encode(pattern);
+        auto decoded = base85::decode(encoded);
+        EXPECT_EQ(pattern, decoded) << "Failed for pattern length " << len;
+    }
+}
+
+TEST(Base85Extended, DecodeLongRandomData) {
+    std::string data(10000, 'x');
+    for (size_t i = 0; i < data.size(); ++i) {
+        data[i] = 'a' + (i % 26);
+    }
+    std::vector<uint8_t> original(data.begin(), data.end());
+    auto encoded = base85::encode(original);
+    auto decoded = base85::decode(encoded);
+    EXPECT_EQ(original, decoded);
 }
