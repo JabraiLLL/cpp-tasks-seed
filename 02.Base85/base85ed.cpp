@@ -7,11 +7,8 @@
 
 namespace base85 {
 
-static constexpr char ALPHABET[] =
-    "0123456789"
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    "abcdefghijklmnopqrstuvwxyz"
-    "!#$%&()*+-;<=>?@^_`{|}~";
+static constexpr char ALPHABET[] = 
+    "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!#$%&()*+-;<=>?@^_`{|}~";
 
 static constexpr std::array<uint8_t, 256> buildDecodeTable() {
     std::array<uint8_t, 256> table{};
@@ -30,20 +27,17 @@ static inline bool isWhitespace(uint8_t c) {
 
 std::vector<uint8_t> encode(const std::vector<uint8_t>& bytes) {
     std::vector<uint8_t> result;
-    if (bytes.empty()) return result;
-    
     size_t i = 0;
     while (i < bytes.size()) {
         uint32_t val = 0;
-        int chunkSize = 0;
-        
-        for (int j = 0; j < 4; ++j) {
-            val <<= 8;
-            if (i < bytes.size()) {
-                val |= bytes[i++];
-                chunkSize++;
-            }
+        int cnt = 0;
+        for (int j = 0; j < 4 && i < bytes.size(); ++j, ++i) {
+            val = (val << 8) | bytes[i];
+            ++cnt;
         }
+        if (cnt == 0) break;
+        
+        for (int j = cnt; j < 4; ++j) val <<= 8;
         
         uint8_t block[5];
         for (int j = 4; j >= 0; --j) {
@@ -51,19 +45,12 @@ std::vector<uint8_t> encode(const std::vector<uint8_t>& bytes) {
             val /= 85;
         }
         
-        if (chunkSize < 4) {
-            result.insert(result.end(), block, block + chunkSize + 1);
-        } else {
-            result.insert(result.end(), block, block + 5);
-        }
+        result.insert(result.end(), block, block + 5);
     }
-    
     return result;
 }
 
 std::vector<uint8_t> decode(const std::vector<uint8_t>& data) {
-    if (data.empty()) return {};
-    
     std::vector<uint8_t> filtered;
     for (uint8_t c : data) {
         if (isWhitespace(c)) continue;
@@ -75,21 +62,20 @@ std::vector<uint8_t> decode(const std::vector<uint8_t>& data) {
     
     if (filtered.empty()) return {};
     
+    if (filtered.size() % 5 != 0) {
+    }
+    
     std::vector<uint8_t> result;
     size_t i = 0;
-    
     while (i < filtered.size()) {
-        int remaining = filtered.size() - i;
-        int blockLen = (remaining >= 5) ? 5 : remaining;
-        
         uint32_t val = 0;
-        for (int j = 0; j < blockLen; ++j) {
-            val = val * 85 + DECODE_TABLE[filtered[i++]];
+        int cnt = 0;
+        for (int j = 0; j < 5 && i < filtered.size(); ++j, ++i) {
+            val = val * 85 + DECODE_TABLE[filtered[i]];
+            ++cnt;
         }
         
-        for (int j = blockLen; j < 5; ++j) {
-            val = val * 85 + 84;
-        }
+        for (int j = cnt; j < 5; ++j) val = val * 85 + 84;
         
         uint8_t decoded[4];
         decoded[0] = (val >> 24) & 0xFF;
@@ -97,13 +83,12 @@ std::vector<uint8_t> decode(const std::vector<uint8_t>& data) {
         decoded[2] = (val >> 8) & 0xFF;
         decoded[3] = val & 0xFF;
         
-        if (blockLen < 5) {
-            result.insert(result.end(), decoded, decoded + blockLen - 1);
-        } else {
-            result.insert(result.end(), decoded, decoded + 4);
+        int bytesToAdd = 4;
+        if (cnt < 5 && cnt > 0) {
+            bytesToAdd = cnt - 1;
         }
+        result.insert(result.end(), decoded, decoded + bytesToAdd);
     }
-    
     return result;
 }
 
