@@ -21,6 +21,10 @@ utest: base85ed_test.o base85ed.o
 run_utest: utest
 	./$<
 
+run_itest: utest
+	@echo "Integration tests for Base85"
+	./utest
+
 base85ed.o: base85ed.cpp base85ed.h
 	$(CXX) $(CXXFLAGS) -c base85ed.cpp -o $@
 
@@ -36,4 +40,4 @@ tidy:
 clean:
 	rm -f *.o utest
 
-.PHONY: all depends release debug utest run_utest astyle tidy clean
+.PHONY: all depends release debug utest run_utest run_itest astyle tidy clean
