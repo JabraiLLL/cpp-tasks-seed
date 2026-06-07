@@ -3,6 +3,7 @@
 #include <sstream>
 #include <string>
 #include <stdexcept>
+#include <iomanip>
 
 GaussMatrix load_csv_to_matrix(const char *filename)
 {

@@ -31,7 +31,6 @@ GaussVector Gauss_solve(GaussMatrix &ab)
             throw std::runtime_error("singular matrix");
         }
 
-        // Перестановка строк
         if (pivot_row != col)
         {
             ab.row(col).swap(ab.row(pivot_row));
