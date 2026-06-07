@@ -28,4 +28,4 @@ inline std::string decodeToString(const std::string& str) {
 
 }
 
-#endif
+#endif // BASE85ED_H
