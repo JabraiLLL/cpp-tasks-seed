@@ -12,9 +12,6 @@ depends:
 utest: base85ed_test.o base85ed.o
 	$(CXX) -o $@ $^ $(GTEST_LIBS)
 
-run_utest: utest
-	./$<
-
 base85ed.o: base85ed.cpp base85ed.h
 	$(CXX) $(CXXFLAGS) -c base85ed.cpp -o $@
 
@@ -30,4 +27,4 @@ tidy:
 clean:
 	rm -f *.o utest
 
-.PHONY: all depends utest run_utest astyle tidy clean
+.PHONY: all depends utest astyle tidy clean
