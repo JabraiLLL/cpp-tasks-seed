@@ -3,92 +3,120 @@
 #include <algorithm>
 #include "sorting.h"
 
-// тесты для пузырька
+// ЮНИТ-ТЕСТЫ BUBBLE_SORT
 
-TEST(BubbleSort, empty_array) {
-    std::vector<int> data;
-    bubble_sort(data.begin(), data.end());
-    EXPECT_TRUE(std::is_sorted(data.begin(), data.end()));
+TEST(BubbleSortTest, EmptyArray) {
+    std::vector<int> arr;
+    bubble_sort(arr.begin(), arr.end());
+    EXPECT_TRUE(std::is_sorted(arr.begin(), arr.end()));
 }
 
-TEST(BubbleSort, single_number) {
-    std::vector<int> data = {42};
-    bubble_sort(data.begin(), data.end());
-    EXPECT_TRUE(std::is_sorted(data.begin(), data.end()));
+TEST(BubbleSortTest, SingleElement) {
+    std::vector<int> arr = {42};
+    bubble_sort(arr.begin(), arr.end());
+    EXPECT_TRUE(std::is_sorted(arr.begin(), arr.end()));
 }
 
-TEST(BubbleSort, already_sorted) {
-    std::vector<int> data = {1, 2, 3, 4, 5};
-    bubble_sort(data.begin(), data.end());
-    EXPECT_TRUE(std::is_sorted(data.begin(), data.end()));
+TEST(BubbleSortTest, AlreadySorted) {
+    std::vector<int> arr = {1, 2, 3, 4, 5};
+    bubble_sort(arr.begin(), arr.end());
+    EXPECT_TRUE(std::is_sorted(arr.begin(), arr.end()));
 }
 
-TEST(BubbleSort, reversed_order) {
-    std::vector<int> data = {9, 7, 5, 3, 1};
-    bubble_sort(data.begin(), data.end());
-    EXPECT_TRUE(std::is_sorted(data.begin(), data.end()));
+TEST(BubbleSortTest, ReversedOrder) {
+    std::vector<int> arr = {5, 4, 3, 2, 1};
+    bubble_sort(arr.begin(), arr.end());
+    EXPECT_TRUE(std::is_sorted(arr.begin(), arr.end()));
 }
 
-TEST(BubbleSort, with_duplicates) {
-    std::vector<int> data = {3, 1, 4, 1, 5, 3, 2};
-    bubble_sort(data.begin(), data.end());
-    EXPECT_TRUE(std::is_sorted(data.begin(), data.end()));
+TEST(BubbleSortTest, WithDuplicates) {
+    std::vector<int> arr = {3, 1, 4, 1, 5, 9, 2, 6, 5, 3};
+    bubble_sort(arr.begin(), arr.end());
+    EXPECT_TRUE(std::is_sorted(arr.begin(), arr.end()));
 }
 
-TEST(BubbleSort, negative_numbers) {
-    std::vector<int> data = {-5, -2, -8, 0, -1, 3};
-    bubble_sort(data.begin(), data.end());
-    EXPECT_TRUE(std::is_sorted(data.begin(), data.end()));
+TEST(BubbleSortTest, NegativeNumbers) {
+    std::vector<int> arr = {-5, -2, -8, 0, -1, 3, -10};
+    bubble_sort(arr.begin(), arr.end());
+    EXPECT_TRUE(std::is_sorted(arr.begin(), arr.end()));
 }
 
-// тесты для быстрой сортировки
+// ЮНИТ-ТЕСТЫ QUICK_SORT
 
-TEST(QuickSort, empty_array) {
-    std::vector<int> data;
-    quick_sort(data.begin(), data.end());
-    EXPECT_TRUE(std::is_sorted(data.begin(), data.end()));
+TEST(QuickSortTest, EmptyArray) {
+    std::vector<int> arr;
+    quick_sort(arr.begin(), arr.end());
+    EXPECT_TRUE(std::is_sorted(arr.begin(), arr.end()));
 }
 
-TEST(QuickSort, single_number) {
-    std::vector<int> data = {7};
-    quick_sort(data.begin(), data.end());
-    EXPECT_TRUE(std::is_sorted(data.begin(), data.end()));
+TEST(QuickSortTest, SingleElement) {
+    std::vector<int> arr = {42};
+    quick_sort(arr.begin(), arr.end());
+    EXPECT_TRUE(std::is_sorted(arr.begin(), arr.end()));
 }
 
-TEST(QuickSort, already_sorted) {
-    std::vector<int> data = {10, 20, 30, 40, 50};
-    quick_sort(data.begin(), data.end());
-    EXPECT_TRUE(std::is_sorted(data.begin(), data.end()));
+TEST(QuickSortTest, AlreadySorted) {
+    std::vector<int> arr = {1, 2, 3, 4, 5};
+    quick_sort(arr.begin(), arr.end());
+    EXPECT_TRUE(std::is_sorted(arr.begin(), arr.end()));
 }
 
-TEST(QuickSort, reversed_order) {
-    std::vector<int> data = {50, 40, 30, 20, 10};
-    quick_sort(data.begin(), data.end());
-    EXPECT_TRUE(std::is_sorted(data.begin(), data.end()));
+TEST(QuickSortTest, ReversedOrder) {
+    std::vector<int> arr = {5, 4, 3, 2, 1};
+    quick_sort(arr.begin(), arr.end());
+    EXPECT_TRUE(std::is_sorted(arr.begin(), arr.end()));
 }
 
-TEST(QuickSort, random_order) {
-    std::vector<int> data = {8, 3, 1, 7, 0, 9, 2, 5, 4, 6};
-    quick_sort(data.begin(), data.end());
-    EXPECT_TRUE(std::is_sorted(data.begin(), data.end()));
+TEST(QuickSortTest, WithDuplicates) {
+    std::vector<int> arr = {3, 1, 4, 1, 5, 9, 2, 6, 5, 3};
+    quick_sort(arr.begin(), arr.end());
+    EXPECT_TRUE(std::is_sorted(arr.begin(), arr.end()));
 }
 
-TEST(QuickSort, with_duplicates) {
-    std::vector<int> data = {5, 2, 5, 1, 2, 5, 1};
-    quick_sort(data.begin(), data.end());
-    EXPECT_TRUE(std::is_sorted(data.begin(), data.end()));
+TEST(QuickSortTest, NegativeNumbers) {
+    std::vector<int> arr = {-5, -2, -8, 0, -1, 3, -10};
+    quick_sort(arr.begin(), arr.end());
+    EXPECT_TRUE(std::is_sorted(arr.begin(), arr.end()));
 }
 
-// интеграционный тест
+// ИНТЕГРАЦИОННЫЕ ТЕСТЫ
 
-TEST(Integration, compare_both_sorts) {
-    std::vector<int> source = {9, 2, 7, 4, 1, 8, 3, 6, 5};
+TEST(IntegrationTest, BubbleAndQuickProduceSameResult) {
+    std::vector<int> original = {9, 2, 7, 4, 1, 8, 3, 6, 5, 0};
     
-    std::vector<int> bubble_copy = source;
-    std::vector<int> quick_copy = source;
+    std::vector<int> bubble_copy = original;
+    std::vector<int> quick_copy = original;
     
     bubble_sort(bubble_copy.begin(), bubble_copy.end());
     quick_sort(quick_copy.begin(), quick_copy.end());
     
     EXPECT_EQ(bubble_copy, quick_copy);
+}
+
+TEST(IntegrationTest, DifferentSizes) {
+    std::vector<int> sizes = {0, 1, 10, 100, 1000};
+    
+    for (int size : sizes) {
+        std::vector<int> original(size);
+        for (int i = 0; i < size; ++i) {
+            original[i] = size - i;
+        }
+        
+        std::vector<int> bubble_copy = original;
+        std::vector<int> quick_copy = original;
+        
+        bubble_sort(bubble_copy.begin(), bubble_copy.end());
+        quick_sort(quick_copy.begin(), quick_copy.end());
+        
+        EXPECT_EQ(bubble_copy, quick_copy) << "Failed for size " << size;
+        EXPECT_TRUE(std::is_sorted(bubble_copy.begin(), bubble_copy.end())) 
+            << "Not sorted for size " << size;
+    }
+}
+
+// MAIN
+
+int main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }
