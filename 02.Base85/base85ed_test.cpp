@@ -3,18 +3,22 @@
 #include <string>
 #include "base85ed.h"
 
-static std::vector<uint8_t> cstr2v(const char* s) {
+static std::vector<uint8_t> cstr2v(const char* s)
+{
     return std::vector<uint8_t>(s, s + std::string(s).length());
 }
 
-TEST(Base85Extended, EncodeDecodeEmptyString) {
+TEST(Base85Extended, EncodeDecodeEmptyString)
+{
     std::vector<uint8_t> empty;
     EXPECT_EQ(base85::encode(empty), empty);
     EXPECT_EQ(base85::decode(empty), empty);
 }
 
-TEST(Base85Extended, EncodeDecodeSingleChar) {
-    for (char c = 'a'; c <= 'z'; ++c) {
+TEST(Base85Extended, EncodeDecodeSingleChar)
+{
+    for (char c = 'a'; c <= 'z'; ++c)
+    {
         std::string s(1, c);
         auto encoded = base85::encode(cstr2v(s.c_str()));
         auto decoded = base85::decode(encoded);
@@ -22,35 +26,43 @@ TEST(Base85Extended, EncodeDecodeSingleChar) {
     }
 }
 
-TEST(Base85Extended, EncodeDecodeTwoChars) {
+TEST(Base85Extended, EncodeDecodeTwoChars)
+{
     std::vector<std::string> cases = { "ab", "cd", "12", "xy", "!!" };
-    for (const auto& s : cases) {
+    for (const auto& s : cases)
+    {
         auto encoded = base85::encode(cstr2v(s.c_str()));
         auto decoded = base85::decode(encoded);
         EXPECT_EQ(cstr2v(s.c_str()), decoded);
     }
 }
 
-TEST(Base85Extended, EncodeDecodeThreeChars) {
+TEST(Base85Extended, EncodeDecodeThreeChars)
+{
     std::vector<std::string> cases = { "abc", "123", "xyz", "!@#" };
-    for (const auto& s : cases) {
+    for (const auto& s : cases)
+    {
         auto encoded = base85::encode(cstr2v(s.c_str()));
         auto decoded = base85::decode(encoded);
         EXPECT_EQ(cstr2v(s.c_str()), decoded);
     }
 }
 
-TEST(Base85Extended, EncodeDecodeFourChars) {
+TEST(Base85Extended, EncodeDecodeFourChars)
+{
     std::vector<std::string> cases = { "abcd", "1234", "wxyz", "!@#$" };
-    for (const auto& s : cases) {
+    for (const auto& s : cases)
+    {
         auto encoded = base85::encode(cstr2v(s.c_str()));
         auto decoded = base85::decode(encoded);
         EXPECT_EQ(cstr2v(s.c_str()), decoded);
     }
 }
 
-TEST(Base85Extended, EncodeDecodeVariousLengths) {
-    std::vector<std::string> test_strings = {
+TEST(Base85Extended, EncodeDecodeVariousLengths)
+{
+    std::vector<std::string> test_strings =
+    {
         "Hello",
         "Hello, World!",
         "The quick brown fox jumps over the lazy dog",
@@ -63,7 +75,8 @@ TEST(Base85Extended, EncodeDecodeVariousLengths) {
         std::string(500, 'f'),
         std::string(1000, 'g')
     };
-    for (const auto& test_str : test_strings) {
+    for (const auto& test_str : test_strings)
+    {
         std::vector<uint8_t> original(test_str.begin(), test_str.end());
         auto encoded = base85::encode(original);
         auto decoded = base85::decode(encoded);
@@ -71,7 +84,8 @@ TEST(Base85Extended, EncodeDecodeVariousLengths) {
     }
 }
 
-TEST(Base85Extended, EncodeOutputSize) {
+TEST(Base85Extended, EncodeOutputSize)
+{
     EXPECT_EQ(base85::encode(cstr2v("")).size(), 0);
     EXPECT_EQ(base85::encode(cstr2v("1")).size(), 2);
     EXPECT_EQ(base85::encode(cstr2v("12")).size(), 3);
@@ -80,9 +94,11 @@ TEST(Base85Extended, EncodeOutputSize) {
     EXPECT_EQ(base85::encode(cstr2v("12345")).size(), 7);
 }
 
-TEST(Base85Extended, EncodeDecodeBinaryData) {
+TEST(Base85Extended, EncodeDecodeBinaryData)
+{
     std::vector<uint8_t> binary;
-    for (int i = 0; i < 256; ++i) {
+    for (int i = 0; i < 256; ++i)
+    {
         binary.push_back(static_cast<uint8_t>(i));
     }
     auto encoded = base85::encode(binary);
@@ -90,10 +106,13 @@ TEST(Base85Extended, EncodeDecodeBinaryData) {
     EXPECT_EQ(binary, decoded);
 }
 
-TEST(Base85Extended, EncodeDecodeRepeatedPatterns) {
-    for (int len = 1; len <= 20; ++len) {
+TEST(Base85Extended, EncodeDecodeRepeatedPatterns)
+{
+    for (int len = 1; len <= 20; ++len)
+    {
         std::vector<uint8_t> pattern;
-        for (int i = 0; i < len; ++i) {
+        for (int i = 0; i < len; ++i)
+        {
             pattern.push_back(i % 256);
         }
         auto encoded = base85::encode(pattern);
@@ -102,9 +121,11 @@ TEST(Base85Extended, EncodeDecodeRepeatedPatterns) {
     }
 }
 
-TEST(Base85Extended, DecodeLongRandomData) {
+TEST(Base85Extended, DecodeLongRandomData)
+{
     std::string data(10000, 'x');
-    for (size_t i = 0; i < data.size(); ++i) {
+    for (size_t i = 0; i < data.size(); ++i)
+    {
         data[i] = 'a' + (i % 26);
     }
     std::vector<uint8_t> original(data.begin(), data.end());
